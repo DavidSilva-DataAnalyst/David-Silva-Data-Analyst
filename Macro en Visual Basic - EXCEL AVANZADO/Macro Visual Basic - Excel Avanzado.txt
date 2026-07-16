@@ -1,0 +1,259 @@
+function ejecutarTodo() {
+  try {
+    const ID_DESTINO = '1oJwTFgF-OS08bFwdhGdAPYWhw0wcLQyguJgt27DYtBI';
+    const hoja = SpreadsheetApp.openById(ID_DESTINO).getSheetByName('FACTURA');
+
+    // ---------- 1. Importar datos filtrados ----------
+    importarDatosFiltradosEjecutivos();
+
+    // Esperar un momento para que se carguen los datos antes de continuar
+    SpreadsheetApp.flush();
+
+    const lastRow = hoja.getLastRow();
+    if (lastRow < 2) {
+      Logger.log("No hay datos para procesar.");
+      return;
+    }
+
+    // ---------- 2. Concatenar columna A + B en I ----------
+    hoja.getRange("I1").setValue("CONCAT 22");
+    const valoresA = hoja.getRange(2, 1, lastRow - 1, 1).getValues(); // A
+    const valoresB = hoja.getRange(2, 2, lastRow - 1, 1).getValues(); // B
+    const concatAB = valoresA.map((fila, i) => [fila[0]  + valoresB[i][0]]);
+    hoja.getRange(2, 9, concatAB.length, 1).setValues(concatAB);
+
+    // ---------- 3. Concatenar columna A + H en J ----------
+    hoja.getRange("J1").setValue("CONCAT MES COLAB");
+    const valoresH = hoja.getRange(2, 8, lastRow - 1, 1).getValues(); // H
+    const concatAH = valoresA.map((fila, i) => [fila[0] + valoresH[i][0]]);
+    hoja.getRange(2, 10, concatAH.length, 1).setValues(concatAH);
+
+    // ---------- 4. Calcular % Comisión en K ----------
+    hoja.getRange("K1").setValue("% Comisión");
+    const valoresE = hoja.getRange(2, 5, lastRow - 1, 1).getValues(); // E
+    const comisionesPorcentaje = valoresE.map(fila => {
+      const proveedor = (fila[0] ?? "").toString().trim();
+      if (proveedor === "003 - CHINA") return ["3%"];
+      if (proveedor === "001 - ARCLAD") return ["0,8%"];
+      return ["1%"];
+    });
+    hoja.getRange(2, 11, comisionesPorcentaje.length, 1).setValues(comisionesPorcentaje);
+
+    // ---------- 5. Calcular $ Comision en L ----------
+    hoja.getRange("L1").setValue("$ Comision");
+    const valoresF = hoja.getRange(2, 6, lastRow - 1, 1).getValues(); // F
+    const comisionesDinero = comisionesPorcentaje.map((fila, i) => {
+      let valor = fila[0];
+      let porcentaje = 0;
+      if (typeof valor === "string") {
+        porcentaje = parseFloat(valor.replace(",", ".").replace("%", "").trim()) / 100;
+      } else if (typeof valor === "number") {
+        porcentaje = valor;
+      }
+      const venta = parseFloat(valoresF[i][0]) || 0;
+      return [venta * porcentaje];
+    });
+    hoja.getRange(2, 12, comisionesDinero.length, 1).setValues(comisionesDinero);
+
+    Logger.log("¡Todo el proceso completado correctamente!");
+
+  } catch (err) {
+    Logger.log("Error en ejecutarTodo: " + err);
+  }
+}
+
+
+
+function importarDatosFiltradosEjecutivos() {
+  try {
+    const ID_ORIGEN = '1542jc13M6UMCPwFhtTfekBEK0Nt8JcshEKayTL_vAxw';
+    const hojaOrigen = SpreadsheetApp.openById(ID_ORIGEN).getSheetByName('BD 2025');
+    const datos = hojaOrigen.getDataRange().getValues();
+
+    if (datos.length === 0) {
+      Logger.log('La hoja origen está vacía.');
+      return;
+    }
+
+    const indices = [14, 15, 6, 20, 19, 30, 11, 31];
+    const nombres = [
+      'ALDANA ZAMORA MILDRED JANNETH',
+      'LOPEZ GUTIERREZ ADRIANO RAFAEL',
+      'ARISMENDI LOPEZ JUAN RICARDO',
+      'GIRALDO ROLDAN MARIA CAMILA',
+      'HERNANDEZ ZARATE HOLLMAN GUILLERMO',
+      'CRUZ DUARTE JOSE HEGSENOBERG',
+    ].map(n => n.toUpperCase());
+
+    const encabezado = indices.map(i => datos[0][i]);
+
+    const datosFiltrados = datos.slice(1)
+      .filter(fila => nombres.includes(fila[14]?.toString().trim().toUpperCase()))
+      .map(fila => indices.map(i => {
+        if (i === 31 && fila[i] instanceof Date) {
+          const mes = fila[i].toLocaleDateString('es-ES', { month: 'long' });
+          return mes.charAt(0).toUpperCase() + mes.slice(1);
+        }
+        return fila[i];
+      }));
+
+    const resultado = [encabezado, ...datosFiltrados];
+
+    const ID_DESTINO = '1oJwTFgF-OS08bFwdhGdAPYWhw0wcLQyguJgt27DYtBI';
+    const hojaDestino = SpreadsheetApp.openById(ID_DESTINO).getSheetByName('FACTURA');
+
+    if (resultado.length > 1) {
+
+      // ⬇️ Esta es la línea nueva: borra TODO el contenido de la hoja
+      hojaDestino.clearContents();
+
+      hojaDestino.getRange(1, 1, resultado.length, resultado[0].length).setValues(resultado);
+      Logger.log(`Se copiaron ${resultado.length - 1} filas.`);
+    } else {
+      Logger.log('No se encontraron filas que coincidan con los nombres.');
+    }
+
+  } catch (err) {
+    Logger.log(' Error al importar los datos: ' + err);
+  }
+}
+
+function concatenarAyB() {
+  try {
+    const ID_DESTINO = '1oJwTFgF-OS08bFwdhGdAPYWhw0wcLQyguJgt27DYtBI';
+    const hoja = SpreadsheetApp.openById(ID_DESTINO).getSheetByName('FACTURA');
+
+    // 1. Encabezado en I1
+    hoja.getRange("I1").setValue("CONCAT 22");
+
+    // 2. Obtener datos de A y B
+    const lastRow = hoja.getLastRow();
+    if (lastRow < 2) {
+      Logger.log("No hay datos para concatenar.");
+      return;
+    }
+
+    const valoresA = hoja.getRange(2, 1, lastRow - 1, 1).getValues(); // Columna A
+    const valoresB = hoja.getRange(2, 2, lastRow - 1, 1).getValues(); // Columna B
+
+    // 3. Crear concatenación
+    const concatenado = valoresA.map((fila, i) => {
+      const a = fila[0] ?? "";
+      const b = valoresB[i][0] ?? "";
+      return [a.toString() + " " + b.toString()];
+    });
+
+    // 4. Pegar en columna I (columna 9)
+    hoja.getRange(2, 9, concatenado.length, 1).setValues(concatenado);
+
+    Logger.log("Concatenación en columna I completada.");
+  } catch (err) {
+    Logger.log("Error: " + err);
+  }
+}
+
+function concatenarAyH() {
+  try {
+    const ID_DESTINO = '1oJwTFgF-OS08bFwdhGdAPYWhw0wcLQyguJgt27DYtBI';
+    const hoja = SpreadsheetApp.openById(ID_DESTINO).getSheetByName('FACTURA');
+
+    // 1. Encabezado en J1
+    hoja.getRange("J1").setValue("CONCAT MES COLAB");
+
+    // 2. Obtener datos de A y H
+    const lastRow = hoja.getLastRow();
+    if (lastRow < 2) {
+      Logger.log("No hay datos para concatenar.");
+      return;
+    }
+
+    const valoresA = hoja.getRange(2, 1, lastRow - 1, 1).getValues(); // Columna A
+    const valoresH = hoja.getRange(2, 8, lastRow - 1, 1).getValues(); // Columna H
+
+    // 3. Crear concatenación
+    const concatenado = valoresA.map((fila, i) => {
+      const a = fila[0] ?? "";
+      const h = valoresH[i][0] ?? "";
+      return [a.toString() + " " + h.toString()];
+    });
+
+    // 4. Pegar en columna J (columna 10)
+    hoja.getRange(2, 10, concatenado.length, 1).setValues(concatenado);
+
+    Logger.log("Concatenación de A + H en columna J completada.");
+  } catch (err) {
+    Logger.log("Error: " + err);
+  }
+}
+
+function calcularComision() {
+  try {
+    const ID_DESTINO = '1oJwTFgF-OS08bFwdhGdAPYWhw0wcLQyguJgt27DYtBI';
+    const hoja = SpreadsheetApp.openById(ID_DESTINO).getSheetByName('FACTURA');
+
+    // 1. Encabezado en K1
+    hoja.getRange("K1").setValue("% Comisión");
+
+    // 2. Obtener datos de columna E
+    const lastRow = hoja.getLastRow();
+    if (lastRow < 2) {
+      Logger.log("No hay datos para calcular comisión.");
+      return;
+    }
+
+    const proveedores = hoja.getRange(2, 5, lastRow - 1, 1).getValues(); // Columna E
+
+    // 3. Crear arreglo de comisiones
+    const comisiones = proveedores.map(fila => {
+      const proveedor = fila[0]?.toString().trim();
+      if (proveedor === "003 - CHINA") return ["3%"];
+      if (proveedor === "001 - ARCLAD") return ["0,8%"];
+      return ["1%"];
+    });
+
+    // 4. Pegar resultados en columna K (columna 11)
+    hoja.getRange(2, 11, comisiones.length, 1).setValues(comisiones);
+
+    Logger.log("Cálculo de comisión completado.");
+  } catch (err) {
+    Logger.log("Error: " + err);
+  }
+}
+function calcularComisionDinero() {
+  try {
+    const ID_DESTINO = '1oJwTFgF-OS08bFwdhGdAPYWhw0wcLQyguJgt27DYtBI';
+    const hoja = SpreadsheetApp.openById(ID_DESTINO).getSheetByName('FACTURA');
+
+    hoja.getRange("L1").setValue("$ Comision");
+
+    const lastRow = hoja.getLastRow();
+    if (lastRow < 2) return;
+
+    const porcentajes = hoja.getRange(2, 11, lastRow - 1, 1).getValues(); // K
+    const valoresVenta = hoja.getRange(2, 6, lastRow - 1, 1).getValues(); // F
+
+    const comisionesDinero = porcentajes.map((fila, i) => {
+      let valor = fila[0];
+
+      let porcentaje = 0;
+
+      if (typeof valor === "string") {
+        // Texto con % → convertir a decimal
+        let porcentajeStr = valor.replace(",", ".").replace("%", "").trim();
+        porcentaje = parseFloat(porcentajeStr) / 100;
+      } else if (typeof valor === "number") {
+        // Ya es decimal → usar tal cual
+        porcentaje = valor;
+      }
+
+      let venta = parseFloat(valoresVenta[i][0]) || 0;
+      return [venta * porcentaje];
+    });
+
+    hoja.getRange(2, 12, comisionesDinero.length, 1).setValues(comisionesDinero);
+
+    Logger.log("$ Comision calculada correctamente.");
+  } catch (err) {
+    Logger.log("Error: " + err);
+  }
+}
