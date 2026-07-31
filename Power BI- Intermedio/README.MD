@@ -23,11 +23,11 @@ El dashboard est√° conectado a una base de datos en Excel. Cualquier modificaci√
 
 ## Resultado
 
-!\[Dashboard sin filtros activados](./capturas/Dashboard-sin-Filtros-Activados.png)
+!\[Dashboard sin filtros activados](./Capturas/Dashboard-sin-Filtros-Activados.png)
 
-!\[Dashboard con un filtro activado](./capturas/Dashboard-Un-Filtro-Activado.png)
+!\[Dashboard con un filtro activado](./Capturas/Dashboard-Un-Filtro-Activado.png)
 
-!\[Dashboard con varios filtros activados](./capturas/Dashboard-Varios-Filtros-Activados.png)
+!\[Dashboard con varios filtros activados](./Capturas/Dashboard-Varios-Filtros-Activados.png)
 
 ## Insights principales
 
