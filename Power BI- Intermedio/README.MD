@@ -23,11 +23,7 @@ El dashboard está conectado a una base de datos en Excel. Cualquier modificaci�
 
 ## Resultado
 
-!\[Dashboard sin filtros activados](./Capturas/Dashboard-sin-Filtros-Activados.png) 
-
-!\[Dashboard con un filtro activado](./Capturas/Dashboard-Un-Filtro-Activado.png)
-
-!\[Dashboard con varios filtros activados](./Capturas/Dashboard-Varios-Filtros-Activados.png)
+Para visualizar el resultado del proyecto, consulte la carpeta de **Capturas**, donde se muestran las principales visualizaciones implementadas. Además, se incluye el archivo de **Power BI (.pbix)** para que pueda explorar el dashboard de manera interactiva.
 
 ## Insights principales
 
