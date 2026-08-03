@@ -1,4 +1,4 @@
-# Venta de Cliente por Departamento — Dashboard Interactivo en Power BI
+# Venta de Cliente por Departamento — Dashboard Interactivo en Power BI 
 
 ## Objetivo
 
@@ -34,4 +34,6 @@ El dashboard está conectado a una base de datos en Excel. Cualquier modificaci�
 * Identificación de los clientes con mayor importe de venta (Cliente-005 y Cliente-003 concentran los montos más altos).
 * Visualización clara de la distribución geográfica de clientes entre España, Francia e Italia.
 * Análisis de duración de cursos segmentado por jornada (mañana, tarde, noche) y ciudad, útil para planificación operativa.
+
+David Esteban Silva Galvis
 
